@@ -6,51 +6,19 @@
 #include "RSA_Encryptor.h"
 
 
-int sum_mod (
-        unsigned  long  long  int x ,
-        unsigned  long  long  int y ,
-        unsigned  long  long  int m ) {
-    if ( m - x > y )
-        return  x + y ;
-    return  y - ( m - x ) ; }
-
-// ( x * y ) mod m , 0 < x < m , y < m
-// ( 5 * y ) mod m = ( y mod m ) + ( ( ( y * 2 ) mod m ) * 2 ) mod m
-int mul_mod (
-        unsigned  long  long  int x ,
-        unsigned  long  long  int y ,
-        unsigned  long  long  int m ) {
-    if  ( x > y ) {
-        unsigned  long  long  int tmp = x ;
-        x = y ;
-        y = tmp ; }
-    // x <= y
-    unsigned  long  long  int res = 0 ;
-    unsigned  long  long  int iy  = y ;
-    while ( x ) {
-        if ( x & 1 )
-            res = sum_mod ( res , iy , m ) ;
-        iy  = sum_mod  ( iy , iy , m ) ;
-        x >>= 1 ; }
-    return  res ; }
-
-// ( x ^ n ) mod m , x < m , n > 0 , m > 0
-// ( x ^ 5 ) mod m == ( ( x mod m ) * ( ( ( ( ( x ^ 2 ) mod m ) ) ^ 2 ) mod m ) ) mod m
-int pow_mod (
-        unsigned  long  long  int x ,
-        unsigned  long  long  int n ,
-        unsigned  long  long  int m ) {
-    int res = 1 ;
-    while ( n ) {
-        if ( n & 1 )
-            res = mul_mod ( res , x , m ) ;
-        x = mul_mod ( x , x , m ) ;
-        n >>= 1 ; }
-    return res  ; }
+int mul_mod(int first, int second, int field) {
+    return (first * second) % field;
+}
 int NOD(int a, int b) {
-    if (a > b) return NOD(a - b, b);
-    else if (a < b) return NOD(a, b - a);
-    else return a;
+//    if (a > b) return NOD(a - b, b);
+//    else if (a < b) return NOD(a, b - a);
+//    else return a;
+    for (int i = 2; i < b / 2; ++i) {
+        if (b % i == 0 && a % i == 0) {
+            return i;
+        }
+    }
+    return 1;
 }
 int pow(const int &base, const int &degree, int field) {
     int ret = base;
@@ -65,8 +33,8 @@ RSA_Encryptor::RSA_Encryptor(int p, int q) {
     int fi = eilerFunc(p, q);
     e = checkSimplisity(fi);
     int k = 1;
-    while ((k * fi + 1) % e != 0) {
-        ++k;
+    while (((k * fi) + 1) % e != 0) {
+        k++;
     }
     d = (k * fi + 1) / e;
 }
@@ -88,37 +56,7 @@ int RSA_Encryptor::checkSimplisity(int end) {
 int RSA_Encryptor::encrypt(const std::string &inputFilePath, const std::string &outputFilePath) {
     std::ifstream in(CURRENT_PATH + inputFilePath, std::ios::binary | std::ios::in);
     std::ofstream out(CURRENT_PATH + outputFilePath, std::ios::binary | std::ios::out);
-    std::vector<int> buff;
-    char byte;
-    if (!in) {
-        std::cerr << "Error with opening input file" << std::endl;
-        return 1;
-    }
-    if (!out) {
-        std::cerr << "Error with opening output file" << std::endl;
-        return 1;
-    }
-    while (in.get(byte)) {
-        buff.push_back(static_cast<int>(byte));
-    }
-    std::vector<int> encrypted;
-    for (int m : buff) {
-        int c = 1;
-        for (int i = 0; i < e; i++) {
-            c = (c * m) % n;
-        }
-        encrypted.push_back(c);
-        std::cout << "Read: " << m << " " << static_cast<char>(m) <<
-                  " Calculated: " << c << " " << static_cast<char>(c) << std::endl;
-        out << static_cast<char>(c);
-    }
-    return 0;
-}
-
-int RSA_Encryptor::decrypt(const std::string &inputFilePath, const std::string &outputFilePath) {
-    std::ifstream in(CURRENT_PATH + inputFilePath, std::ios::binary | std::ios::in);
-    std::ofstream out(CURRENT_PATH + outputFilePath, std::ios::binary | std::ios::out);
-    std::vector<int> buff;
+    std::vector<unsigned char> buff;
     char byte;
     if (!in) {
         std::cerr << "Error with opening input file" << std::endl;
@@ -131,14 +69,38 @@ int RSA_Encryptor::decrypt(const std::string &inputFilePath, const std::string &
     while (in.get(byte)) {
         buff.push_back(byte);
     }
+    std::vector<int> encrypted;
+    for (char m : buff) {
+        int c = pow(static_cast<int>(m), e, n);
+        encrypted.push_back(c);
+        std::cout << "Read: " << static_cast<int>(m) << " " << m <<
+                  " Calculated: " << c << " " << static_cast<char>(c) << std::endl;
+        out << static_cast<char>(c);
+    }
+    return 0;
+}
+
+int RSA_Encryptor::decrypt(const std::string &inputFilePath, const std::string &outputFilePath) {
+    std::ifstream in(CURRENT_PATH + inputFilePath, std::ios::binary | std::ios::in);
+    std::ofstream out(CURRENT_PATH + outputFilePath, std::ios::binary | std::ios::out);
+    std::vector<unsigned char> buff;
+    unsigned char byte;
+    if (!in) {
+        std::cerr << "Error with opening input file" << std::endl;
+        return 1;
+    }
+    if (!out) {
+        std::cerr << "Error with opening output file" << std::endl;
+        return 1;
+    }
+    while (in.get(reinterpret_cast<char &>(byte))) {
+        buff.push_back(byte);
+    }
     std::vector<int> decrypted;
-    for (int m : buff) {
-        int c = 1;
-        for (int i = 0; i < d; ++i) {
-            c = (c * m) % n;
-        }
+    for (unsigned char m : buff) {
+        int c = pow(static_cast<int>(m), d, n);
         decrypted.push_back(c);
-        std::cout << "Read: " << m << " " << static_cast<char>(m) <<
+        std::cout << "Read: " << m << " " << static_cast<int>(m) <<
                   " Calculated: " << c << " " << static_cast<char>(c) << std::endl;
         out << static_cast<char>(c);
     }

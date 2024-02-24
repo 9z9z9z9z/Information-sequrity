@@ -13,7 +13,7 @@
 class RSA_Encryptor {
 public:
     RSA_Encryptor() = delete;
-    RSA_Encryptor(int q, int n);
+    RSA_Encryptor(int q, int p);
     int encrypt(const std::string &inputFilePath, const std::string &outputFilePath);
     int decrypt(const std::string &inputFilePath, const std::string &outputFilePath);
     void data();

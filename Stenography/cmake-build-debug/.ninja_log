@@ -1,0 +1,11 @@
+# ninja log v5
+1	199	7304813571936850	build.ninja	87f26a1be790a039
+4	389	7304764779441009	CMakeFiles/Stenography.dir/Stenographer.cpp.obj	33bdfe15eac6816d
+4	350	7304813455793736	CMakeFiles/Stenography.dir/main.cpp.obj	fc8fd40134f3c87a
+350	460	7304813456859038	Stenography.exe	d04d3155fb4c7265
+3	347	7304813913728121	CMakeFiles/Stenography.dir/main.cpp.obj	fc8fd40134f3c87a
+348	461	7304813914827144	Stenography.exe	d04d3155fb4c7265
+5	450	7305004248803942	CMakeFiles/Stenography.dir/main.cpp.obj	fc8fd40134f3c87a
+450	585	7305004250122948	Stenography.exe	d04d3155fb4c7265
+3	358	7305006544849393	CMakeFiles/Stenography.dir/main.cpp.obj	fc8fd40134f3c87a
+358	480	7305006546023766	Stenography.exe	d04d3155fb4c7265
